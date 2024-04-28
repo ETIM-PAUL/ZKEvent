@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {AggregatorV3Interface} from "./AggregatorV3Interface.sol";
+import "./IERC20.sol";
 
 contract Event {
     AggregatorV3Interface internal ethDataFeed;
     AggregatorV3Interface internal daiDataFeed;
     AggregatorV3Interface internal linkDataFeed;
 
-    IERC20 daiTokenAddress;
-    IERC20 linkTokenAddress;
+    IERC20 public daiTokenAddress;
+    IERC20 public linkTokenAddress;
+
+    uint256 ticketIds;
 
     address creator;
     string name;
@@ -21,13 +23,16 @@ contract Event {
     address raffleWinner;
     bool raffleDrawEnd;
     uint256 rafflePrice;
+    uint256 ethRafflePrice;
+    uint256 daiRafflePrice;
+    uint256 linkRafflePrice;
     uint256 ethTotalBalance;
     uint256 daiTotalBalance;
     uint256 linkTotalBalance;
-    uint jackPot;
     EventStatus status;
-    EventParticipant[] eventParticipants;
-    EventParticipant[] raffleDrawParticipants;
+    // EventParticipant[] eventParticipants;
+    EventTicketType[3] eventTicketTypes;
+    address[] public raffleDrawParticipants;
 
     struct EventTicketType {
         uint256 price;
@@ -54,8 +59,8 @@ contract Event {
 
     event EventStarted();
     event EventEnded();
-    event EventTicketBought();
-    event EventRaffleDrawStarted();
+    event EventTicketBought(uint ticketIds, address ticketOwner);
+    event EventRaffleDrawStarted(address raffleTicketOwner);
 
     error InsufficientFunds();
     error ZeroAmount();
@@ -75,6 +80,7 @@ contract Event {
     }
 
     mapping(uint8 => EventTicketType) eventTicketType;
+    mapping(uint256 => EventParticipant) eventParticipants;
 
     constructor(
         address owner,
@@ -84,9 +90,9 @@ contract Event {
         uint256 _startDate,
         bool _raffleDraw,
         uint256 _rafflePrice,
+        EventTicketType[3] memory _ticketType,
         address _daiTokenAddress,
-        address _linkTokenAddress,
-        EventTicketType[] _ticketType
+        address _linkTokenAddress
     ) {
         ethDataFeed = AggregatorV3Interface(
             0x59F1ec1f10bD7eD9B938431086bC1D9e233ECf41
@@ -108,10 +114,11 @@ contract Event {
         daiTokenAddress = IERC20(_daiTokenAddress);
         linkTokenAddress = IERC20(_linkTokenAddress);
         status = EventStatus.Pending;
+        eventTicketTypes = _ticketType;
         for (uint256 index = 0; index < _ticketType.length; index++) {
-            uint256 ticketTypeId;
-            EventTicketType _eventTicketType = _ticketType[index];
-            ticketTypeId = eventTicketType[_eventTicketType];
+            uint8 ticketTypeId;
+            EventTicketType memory _eventTicketType = _ticketType[index];
+            _eventTicketType = eventTicketType[ticketTypeId];
             ticketTypeId++;
         }
     }
@@ -130,9 +137,10 @@ contract Event {
             revert EventHasEnded();
         }
         status = EventStatus.Active;
+        emit EventStarted();
     }
 
-    function endEvent(uint256 _eventId) external {
+    function endEvent() external {
         if (creator != msg.sender) {
             revert NotCreator();
         }
@@ -143,21 +151,36 @@ contract Event {
             revert EventOngoing();
         }
 
-        if (raffleDraw && !eventDetails.raffleDrawEnd) {
+        if (raffleDraw && !raffleDrawEnd) {
             revert RaffleDrawNotEnded();
         }
+        status = EventStatus.Ended;
 
-        uint256 _totalBalance = eventDetails.totalBalance;
-        eventDetails.totalBalance = 0;
-        payable(eventDetails.creator).call{value: _totalBalance}("");
+        if (daiTotalBalance > 0) {
+            bool success = daiTokenAddress.transfer(
+                msg.sender,
+                daiTotalBalance
+            );
+        }
+        if (linkTotalBalance > 0) {
+            bool success = linkTokenAddress.transfer(
+                msg.sender,
+                linkTotalBalance
+            );
+            if (address(this).balance > 0) {
+                (bool sucess, ) = payable(creator).call{
+                    value: address(this).balance
+                }("");
+            }
+        }
 
-        eventDetails.status = EventStatus.Ended;
+        emit EventEnded();
     }
 
     function buyEventTicketEth(
-        uint256 _ticketTypeId,
-        bytes _ticketProof
-    ) external payable {
+        uint8 _ticketTypeId,
+        bytes memory _ticketProof
+    ) external payable returns (uint256 ticketId) {
         EventParticipant memory _participant;
         EventTicketType memory _ticketType = eventTicketType[_ticketTypeId];
 
@@ -166,9 +189,9 @@ contract Event {
         }
 
         uint256 amountEthInUsd = (_ticketType.price * 1e16) /
-            getEthDataFeedLatestAnswer();
+            uint256(getEthDataFeedLatestAnswer());
 
-        if (amountEthInUsd >= msg.value) {
+        if (amountEthInUsd > msg.value) {
             revert InsufficientFunds();
         }
 
@@ -176,14 +199,18 @@ contract Event {
         _participant.ticketId = _ticketTypeId;
         _participant.ticketProof = _ticketProof;
 
-        eventParticipants.push(_participant);
+        ticketIds++;
+        ticketId = ticketIds;
+        eventParticipants[ticketIds] = _participant;
+
+        emit EventTicketBought(ticketIds, msg.sender);
     }
     function buyEventTicketERC20(
-        uint256 _ticketTypeId,
-        bytes _ticketProof,
-        uin256 _amount,
+        uint8 _ticketTypeId,
+        bytes memory _ticketProof,
+        uint256 _amount,
         bool _daiType
-    ) external {
+    ) external returns (uint256 ticketId) {
         EventParticipant memory _participant;
         EventTicketType memory _ticketType = eventTicketType[_ticketTypeId];
 
@@ -195,16 +222,16 @@ contract Event {
         }
 
         if (_daiType) {
-            uint256 amountDaiInUsd = (_ticketType.price * 1e16) /
-                getEthDataFeedLatestAnswer();
-            if (amountEthInUsd >= msg.value) {
+            uint256 amountDaiInUsd = (_ticketType.price * 1e36) /
+                uint256(getEthDataFeedLatestAnswer());
+            if (amountDaiInUsd > _amount) {
                 revert InsufficientFunds();
             }
         } else {
-            uint256 amountLinkInUsd = (_ticketType.price * 1e16) /
-                getEthDataFeedLatestAnswer();
+            uint256 amountLinkInUsd = (_ticketType.price * 1e36) /
+                uint256(getEthDataFeedLatestAnswer());
 
-            if (amountEthInUsd >= msg.value) {
+            if (amountLinkInUsd > _amount) {
                 revert InsufficientFunds();
             }
         }
@@ -213,11 +240,34 @@ contract Event {
         _participant.ticketId = _ticketTypeId;
         _participant.ticketProof = _ticketProof;
 
-        eventParticipants.push(_participant);
+        ticketIds++;
+        ticketId = ticketIds;
+        eventParticipants[ticketIds] = _participant;
+
+        if (_daiType) {
+            bool success = daiTokenAddress.transferFrom(
+                msg.sender,
+                address(this),
+                _amount
+            );
+            if (success) {
+                daiTotalBalance += _amount;
+            }
+        } else {
+            bool success = linkTokenAddress.transferFrom(
+                msg.sender,
+                address(this),
+                _amount
+            );
+            if (success) {
+                linkTotalBalance += _amount;
+            }
+        }
+        emit EventTicketBought(ticketIds, msg.sender);
     }
 
-    function buyEventRaffleDraw() external payable {
-        EventParticipant storage _participant = eventParticipants[msg.sender];
+    function buyEventRaffleEth(uint ticketId) external payable {
+        EventParticipant storage _participant = eventParticipants[ticketId];
 
         if (status == EventStatus.Ended) {
             revert EventHasEnded();
@@ -225,18 +275,75 @@ contract Event {
         if (!raffleDraw) {
             revert NotRaffleEvent();
         }
-        if (
-            keccak256(abi.encodePacked(_participant.ticketType)) ==
-            keccak256(abi.encodePacked(("")))
-        ) {
+        if (_participant.ticketProof.length == 0) {
             revert NotEventParticipant();
         }
-        if (msg.value < rafflePrice) {
-            revert NotRafflePriceNeeded();
+        uint256 amountEthInUsd = (rafflePrice * 1e16) /
+            uint256(getEthDataFeedLatestAnswer());
+
+        if (amountEthInUsd > msg.value) {
+            revert InsufficientFunds();
         }
 
-        jackPot += msg.value;
-        raffleDrawParticipants.push(_participant);
+        ethRafflePrice += msg.value;
+        raffleDrawParticipants.push(msg.sender);
+
+        emit EventRaffleDrawStarted(msg.sender);
+    }
+    function buyEventRaffleERC20(
+        uint256 ticketId,
+        bool _daiType,
+        uint256 _amount
+    ) external payable {
+        EventParticipant storage _participant = eventParticipants[ticketId];
+
+        if (status == EventStatus.Ended) {
+            revert EventHasEnded();
+        }
+        if (!raffleDraw) {
+            revert NotRaffleEvent();
+        }
+        if (_participant.ticketId <= ticketIds) {
+            revert NotEventParticipant();
+        }
+        if (_daiType) {
+            uint256 amountDaiInUsd = (rafflePrice * 1e32) /
+                uint256(getEthDataFeedLatestAnswer());
+            if (amountDaiInUsd > _amount) {
+                revert InsufficientFunds();
+            }
+        } else {
+            uint256 amountLinkInUsd = (rafflePrice * 1e32) /
+                uint256(getEthDataFeedLatestAnswer());
+
+            if (amountLinkInUsd > _amount) {
+                revert InsufficientFunds();
+            }
+        }
+
+        raffleDrawParticipants.push(msg.sender);
+
+        if (_daiType) {
+            bool success = daiTokenAddress.transferFrom(
+                msg.sender,
+                address(this),
+                _amount
+            );
+            if (success) {
+                daiRafflePrice += _amount;
+            }
+        } else {
+            bool success = linkTokenAddress.transferFrom(
+                msg.sender,
+                address(this),
+                _amount
+            );
+            if (success) {
+                linkRafflePrice += _amount;
+            }
+        }
+
+        emit EventRaffleDrawStarted(msg.sender);
     }
 
     function getEvent()
@@ -252,11 +359,11 @@ contract Event {
             address _raffleWinner,
             bool _raffleDrawEnd,
             uint _rafflePrice,
-            uint _totalRaffle,
+            uint _totalEthRafflePrice,
+            uint _totalDaiRafflePrice,
+            uint _totalLinkRafflePrice,
             EventStatus _status,
-            EventTickets[] _eventTickets,
-            EventParticipant[] _eventParticipants,
-            EventParticipant[] _raffleDrawParticipants
+            EventTicketType[3] memory _eventTickets
         )
     {
         _creator = creator;
@@ -268,11 +375,11 @@ contract Event {
         _raffleWinner = raffleWinner;
         _raffleDrawEnd = raffleDrawEnd;
         _rafflePrice = rafflePrice;
-        _totalRaffle = totalRaffle;
+        _totalEthRafflePrice = ethRafflePrice;
+        _totalDaiRafflePrice = daiRafflePrice;
+        _totalLinkRafflePrice = linkRafflePrice;
         _status = status;
-        _eventTickets = eventTickets;
-        _eventParticipants = eventParticipants;
-        _raffleDrawParticipants = raffleDrawParticipants;
+        _eventTickets = eventTicketTypes;
     }
 
     function getRaffleDrawWinner() public view returns (address _raffleWinner) {
