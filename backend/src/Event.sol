@@ -31,7 +31,7 @@ contract Event {
     uint256 linkTotalBalance;
     EventStatus status;
     // EventParticipant[] eventParticipants;
-    EventTicketType[3] eventTicketTypes;
+    EventTicketType[] eventTicketTypes;
     address[] public raffleDrawParticipants;
 
     struct EventTicketType {
@@ -90,7 +90,7 @@ contract Event {
         uint256 _startDate,
         bool _raffleDraw,
         uint256 _rafflePrice,
-        EventTicketType[3] memory _ticketType,
+        EventTicketType[] memory _ticketType,
         address _daiTokenAddress,
         address _linkTokenAddress
     ) {
@@ -114,12 +114,15 @@ contract Event {
         daiTokenAddress = IERC20(_daiTokenAddress);
         linkTokenAddress = IERC20(_linkTokenAddress);
         status = EventStatus.Pending;
-        eventTicketTypes = _ticketType;
         for (uint256 index = 0; index < _ticketType.length; index++) {
             uint8 ticketTypeId;
+            ticketTypeId++;
             EventTicketType memory _eventTicketType = _ticketType[index];
             _eventTicketType = eventTicketType[ticketTypeId];
-            ticketTypeId++;
+            eventTicketTypes[index] = EventTicketType(
+                _eventTicketType.price,
+                _eventTicketType.name
+            );
         }
     }
 
@@ -201,7 +204,7 @@ contract Event {
 
         ticketIds++;
         ticketId = ticketIds;
-        eventParticipants[ticketIds] = _participant;
+        eventParticipants[ticketId] = _participant;
 
         emit EventTicketBought(ticketIds, msg.sender);
     }
@@ -242,7 +245,7 @@ contract Event {
 
         ticketIds++;
         ticketId = ticketIds;
-        eventParticipants[ticketIds] = _participant;
+        eventParticipants[ticketId] = _participant;
 
         if (_daiType) {
             bool success = daiTokenAddress.transferFrom(
@@ -308,14 +311,13 @@ contract Event {
         }
         if (_daiType) {
             uint256 amountDaiInUsd = (rafflePrice * 1e32) /
-                uint256(getEthDataFeedLatestAnswer());
+                uint256(getDaiDataFeedLatestAnswer());
             if (amountDaiInUsd > _amount) {
                 revert InsufficientFunds();
             }
         } else {
             uint256 amountLinkInUsd = (rafflePrice * 1e32) /
-                uint256(getEthDataFeedLatestAnswer());
-
+                uint256(getLinkDataFeedLatestAnswer());
             if (amountLinkInUsd > _amount) {
                 revert InsufficientFunds();
             }
@@ -353,27 +355,23 @@ contract Event {
             address _creator,
             string memory _name,
             string memory _location,
-            uint _endingDate,
             uint _startDate,
             bool _raffleDraw,
             address _raffleWinner,
-            bool _raffleDrawEnd,
             uint _rafflePrice,
             uint _totalEthRafflePrice,
             uint _totalDaiRafflePrice,
             uint _totalLinkRafflePrice,
             EventStatus _status,
-            EventTicketType[3] memory _eventTickets
+            EventTicketType[] memory _eventTickets
         )
     {
         _creator = creator;
         _name = name;
         _location = location;
-        _endingDate = endingDate;
         _startDate = startDate;
         _raffleDraw = raffleDraw;
         _raffleWinner = raffleWinner;
-        _raffleDrawEnd = raffleDrawEnd;
         _rafflePrice = rafflePrice;
         _totalEthRafflePrice = ethRafflePrice;
         _totalDaiRafflePrice = daiRafflePrice;
