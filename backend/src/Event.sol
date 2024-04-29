@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity 0.8.24;
 
 import {AggregatorV3Interface} from "./AggregatorV3Interface.sol";
 import "./IERC20.sol";
@@ -31,7 +31,7 @@ contract Event {
     uint256 linkTotalBalance;
     EventStatus status;
     // EventParticipant[] eventParticipants;
-    EventTicketType[] eventTicketTypes;
+    EventTicketType[3] eventTicketTypes;
     address[] public raffleDrawParticipants;
 
     struct EventTicketType {
@@ -43,11 +43,6 @@ contract Event {
         uint256 ticketId;
         address _eventParticipant;
         bytes ticketProof;
-    }
-
-    struct RaffleDrawInfo {
-        bool raffleDrawEventFinalized;
-        address raffleDrawWinner;
     }
 
     enum EventStatus {
@@ -90,7 +85,7 @@ contract Event {
         uint256 _startDate,
         bool _raffleDraw,
         uint256 _rafflePrice,
-        EventTicketType[] memory _ticketType,
+        EventTicketType[3] memory _ticketType,
         address _daiTokenAddress,
         address _linkTokenAddress
     ) {
@@ -170,11 +165,11 @@ contract Event {
                 msg.sender,
                 linkTotalBalance
             );
-            if (address(this).balance > 0) {
-                (bool sucess, ) = payable(creator).call{
-                    value: address(this).balance
-                }("");
-            }
+        }
+        if (address(this).balance > 0) {
+            (bool sucess, ) = payable(creator).call{
+                value: address(this).balance
+            }("");
         }
 
         emit EventEnded();
@@ -293,6 +288,7 @@ contract Event {
 
         emit EventRaffleDrawStarted(msg.sender);
     }
+
     function buyEventRaffleERC20(
         uint256 ticketId,
         bool _daiType,
@@ -363,7 +359,7 @@ contract Event {
             uint _totalDaiRafflePrice,
             uint _totalLinkRafflePrice,
             EventStatus _status,
-            EventTicketType[] memory _eventTickets
+            EventTicketType[3] memory _eventTickets
         )
     {
         _creator = creator;
@@ -385,6 +381,27 @@ contract Event {
             revert RaffleDrawNotEnded();
         } else {
             _raffleWinner = raffleWinner;
+        }
+    }
+
+    function executeRaffleDraw(uint _ranNum) private {
+        require(_ranNum > 0, "Random Number is less than 0");
+        uint256 maxIndex = raffleDrawParticipants.length;
+        uint256 raffleWinnerIndex = _ranNum % maxIndex;
+        raffleWinner = raffleDrawParticipants[raffleWinnerIndex];
+
+        raffleDrawEnd = true;
+
+        if (daiRafflePrice > 0) {
+            daiTokenAddress.transfer(raffleWinner, daiRafflePrice);
+        }
+        if (linkRafflePrice > 0) {
+            linkTokenAddress.transfer(raffleWinner, linkRafflePrice);
+        }
+        if (ethRafflePrice > 0) {
+            (bool sucess, ) = payable(raffleWinner).call{value: ethRafflePrice}(
+                ""
+            );
         }
     }
 
