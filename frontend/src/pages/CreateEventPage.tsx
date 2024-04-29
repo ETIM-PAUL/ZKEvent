@@ -6,10 +6,11 @@ type Props = {};
 
 const CreateEventPage = (props: Props) => {
     return (
-        <div className="bg-[#1E1E1E]">
+        <div className="bg-white">
             <CreateEvent />
-
-            <Footer />
+            <div className="justify-en">
+                <Footer />
+            </div>
         </div>
     );
 };

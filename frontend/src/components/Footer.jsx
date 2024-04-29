@@ -1,7 +1,3 @@
-import { Link } from "react-router-dom";
-import { footerLinks, socialMedia } from "../constants";
-
-import { cartesi } from "../assets";
 
 const Footer = () => {
     return (

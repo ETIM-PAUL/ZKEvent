@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useState } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+// import { useForm } from "react-hook-form";
+// import { yupResolver } from "@hookform/resolvers/yup";
+// import * as yup from "yup";
 import { NavLink } from "react-router-dom";
 import { EventsData } from "../constants";
 import { Link, useParams } from "react-router-dom";
@@ -68,7 +68,6 @@ const EventDetails = () => {
                         All Events
                     </Link>
 
-                    <WalletConnect />
                 </div>
             </div>
 
@@ -177,11 +176,10 @@ const EventDetails = () => {
                                                 (purchase, index) => (
                                                     <div
                                                         key={index}
-                                                        className={`flex flex-col justify-center px-8 py-6 border-b border-solid bg-gradient-to-l from-blue-500 to-purple-600  max-md:max-w-full ${
-                                                            index === 4
+                                                        className={`flex flex-col justify-center px-8 py-6 border-b border-solid bg-gradient-to-l from-blue-500 to-purple-600  max-md:max-w-full ${index === 4
                                                                 ? "border-b-0"
                                                                 : ""
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <div className="flex flex-row space-x-2 text-white text-lg">
                                                             <p>
@@ -212,21 +210,19 @@ const EventDetails = () => {
                             </div>
                             <div className="flex text-lg font-normal gap-4 ">
                                 <button
-                                    className={`flex justify-center mt-4 py-2 max-w-full text-black ${
-                                        !showParticipantTable
+                                    className={`flex justify-center mt-4 py-2 max-w-full text-black ${!showParticipantTable
                                             ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
                                             : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
-                                    } w-[130px] text-lg font-medium`}
+                                        } w-[130px] text-lg font-medium`}
                                     onClick={showProposalTable}
                                 >
                                     Proposals
                                 </button>
                                 <button
-                                    className={`flex justify-center mt-4 py-2 max-w-full text-black ${
-                                        showParticipantTable
+                                    className={`flex justify-center mt-4 py-2 max-w-full text-black ${showParticipantTable
                                             ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
                                             : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
-                                    } w-[130px] text-lg font-medium`}
+                                        } w-[130px] text-lg font-medium`}
                                     onClick={showParticipant}
                                 >
                                     Participants{" "}

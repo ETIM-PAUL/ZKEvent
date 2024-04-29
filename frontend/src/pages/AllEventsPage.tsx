@@ -6,10 +6,11 @@ type Props = {};
 
 const AllEventsPage = (props: Props) => {
     return (
-        <div className="bg-white">
+        <div className="bg-white flex justify-between items-between min-h-screen flex-col">
             <AllEvents />
-
-            <Footer />
+            <div className="justify-end">
+                <Footer />
+            </div>
         </div>
     );
 };

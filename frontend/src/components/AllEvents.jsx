@@ -1,43 +1,34 @@
 import React, { useState } from "react";
-import Logo from "./Logo";
 import { Link } from "react-router-dom";
-import WalletConnect from "./WalletConnect";
 import { EventsData } from "../constants";
+import { eventFactoryAbi } from "../../assets/EventFactoryAbi";
+import { EVENT_FACTORY_ADDRESS } from "../../assets/Addresses";
+import TopNav from "./TopNav";
+import { useReadContract } from 'wagmi'
 
-type Props = {};
-
-const AllEvents = (props: Props) => {
+const AllEvents = (props) => {
+    const events = useReadContract({
+        abi: eventFactoryAbi,
+        address: EVENT_FACTORY_ADDRESS,
+        functionName: 'returnEvents',
+    })
     const [activeButton, setActiveButton] = useState("LiveEvent");
+    const [loading, setLoading] = useState(events.isPending);
+    const [allEvents, setAllEvents] = useState(!events.isSuccess ? [] : events?.data);
 
     const handleButtonClick = (button) => {
         setActiveButton(button);
     };
 
+
+    console.log(loading)
+
     return (
-        <div className="">
-            <div className=" navbar  bg-gradient-to-r from-[#5522CC] to-[#ED4690] py-8 px-6">
-                <div className="flex-1 ml-16 ">
-                    <Logo />
-                </div>
-
-                <div className="flex mr-14 gap-10">
-                    <Link
-                        to="/user-dashboard"
-                        className="font-medium rounded-md text-xl px-4 py-3 text-center bg-white text-black"
-                    >
-                        Dashboard
-                    </Link>
-
-                    <WalletConnect />
-                </div>
-            </div>
-
-            <div className="w-full bg-[#EEE1FF] h-10"></div>
-
-            {/*  */}
-
-            <div className="bg-base-100 p-8 bg-gradient-to-l from-[#5522CC] to-[#ED4690]">
-                <div className="  flex flex-row gap-4 justify-end mr-20 mt-6 ">
+        <div className="h-[70vh]">
+            <TopNav />
+            <div className="w-full bg-[#EEE1FF] h-6"></div>
+            <div className="bg-base-100 h-full py-8 px-10 md:px-24 bg-gradient-to-l from-[#5522CC] to-[#ED4690]">
+                <div className="  flex flex-row h-fit w-full gap-4 justify-end  mt-6 ">
                     <button
                         className={`py-2 rounded-md border border-bg-[#EEE1FF] w-fit px-3 items-center text-center flex  justify-center font-medium text-lg ${activeButton === "LiveEvent"
                             ? "bg-white text-black"
@@ -70,8 +61,22 @@ const AllEvents = (props: Props) => {
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-0  mt-4  mx-14 pb-20">
-                    {EventsData.map((eventData) => (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-0 mt-4 pb-20">
+                    {allEvents.length === 0 && !events?.isLoading &&
+                        <div
+                            className="text-white font-medium text-lg md:text-3xl mt-10 "
+                        >
+                            <h3>No Events</h3>
+                        </div>
+                    }
+                    {allEvents.length === 0 && events?.isLoading &&
+                        <div
+                            className="text-white font-medium text-lg md:text-3xl mt-10 "
+                        >
+                            <h3>Fetching Events</h3>
+                        </div>
+                    }
+                    {allEvents.length > 0 && EventsData.map((eventData) => (
                         <div
                             key={eventData.id}
                             className=" items-center mx-auto border-2 rounded-xl rounded-b-none shadow-md mt-10 "
@@ -123,6 +128,7 @@ const AllEvents = (props: Props) => {
                             </div>
                         </div>
                     ))}
+
                 </div>
             </div>
 

@@ -5,11 +5,7 @@ import TopNav from "./layout/TopNav";
 const App = () => {
     return (
         <div className="   h-screen">
-            {/* <TopNav /> */}
-
             <div>
-                {/* <MainNav /> */}
-
                 <HomePage />
             </div>
         </div>

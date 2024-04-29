@@ -14,7 +14,7 @@ const HeroNav = (props: Props) => {
                     <div className="-ml-8">
                         <Logo />
                     </div>
-                    <div className=" -mr-8 flex md:order-2 md:space-x-0 rtl:space-x-reverse gap-6">
+                    <div className=" -mr-8 flex items-center md:order-2 md:space-x-0 rtl:space-x-reverse gap-6">
                         <Link
                             to="/"
                             className="btn btn-ghost text-white font-medium text-lg"
@@ -28,7 +28,6 @@ const HeroNav = (props: Props) => {
                         >
                             Contact Us
                         </Link>
-                        {/* <WalletConnect /> */}
 
                         <Link
                             to="/events"
