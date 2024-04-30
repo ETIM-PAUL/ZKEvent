@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     localhost: {
-      url: 'http://127.0.0.1:8545',
+      url: 'https://scroll-testnet.rpc.grove.city/v1/a7a7c8e2',
     },
   },
   paths: {

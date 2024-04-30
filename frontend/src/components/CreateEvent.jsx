@@ -323,7 +323,7 @@ const CreateEvent = (props) => {
             toast.error("Maximum Ticket Types Reached", 5000);
             return;
         }
-        setTicketTypes([...ticketTypes, { price: BigInt(price), name }]);
+        setTicketTypes([...ticketTypes, { price, name }]);
         setName('');
         setPrice('');
     };
