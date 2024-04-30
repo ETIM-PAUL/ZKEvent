@@ -26,6 +26,8 @@ The motivation behind building this project was to provide a practical solution 
 
 - **IPFS**: This is the platform for uploading of event logo
 
+- **Chainlink Data Feeds**: Chainlink was used to fetch price feed for LINK, ETH and DAI (three modes of payment on the platform)
+
 ## SMART CONTRACT OVERVIEW
 
 The following are functions used to implement the event management system.
