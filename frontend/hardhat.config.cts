@@ -1,7 +1,8 @@
 import '@nomicfoundation/hardhat-toolbox-viem';
 import '@nomicfoundation/hardhat-viem';
 import '@nomicfoundation/hardhat-chai-matchers';
-
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomicfoundation/hardhat-ethers';
 import { HardhatUserConfig } from 'hardhat/config';
 
 import * as dotenv from 'dotenv';

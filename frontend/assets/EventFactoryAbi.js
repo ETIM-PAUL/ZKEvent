@@ -91,11 +91,6 @@ export const eventFactoryAbi = [
             "internalType": "uint256",
             "name": "rafflePrice",
             "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "normalEventType",
-            "type": "bool"
           }
         ],
         "internalType": "struct EventFactory.EventDetails",
@@ -174,11 +169,6 @@ export const eventFactoryAbi = [
             "internalType": "uint256",
             "name": "rafflePrice",
             "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "normalEventType",
-            "type": "bool"
           }
         ],
         "internalType": "struct EventFactory.EventDetails",
@@ -306,11 +296,6 @@ export const eventFactoryAbi = [
             "internalType": "uint256",
             "name": "rafflePrice",
             "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "normalEventType",
-            "type": "bool"
           }
         ],
         "internalType": "struct EventFactory.EventDetails[]",

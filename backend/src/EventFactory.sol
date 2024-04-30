@@ -5,11 +5,11 @@ import "./Event.sol";
 
 contract EventFactory {
     AggregatorV3Interface internal ethDataFeed =
-        AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        AggregatorV3Interface(0x59F1ec1f10bD7eD9B938431086bC1D9e233ECf41);
     AggregatorV3Interface internal daiDataFeed =
-        AggregatorV3Interface(0x14866185B1962B63C3Ea9E03Bc1da838bab34C19);
+        AggregatorV3Interface(0x9388954B816B2030B003c81A779316394b3f3f11);
     AggregatorV3Interface internal linkDataFeed =
-        AggregatorV3Interface(0xc59E3633BAAC79493d908e63626716e204A45EdF);
+        AggregatorV3Interface(0xaC3E04999aEfE44D508cB3f9B972b0Ecd07c1efb);
 
     address owner;
     address _daiTokenAddress = 0x3162034A794E68A0559ac133faf2aa5f852B9Cf8;
@@ -28,7 +28,6 @@ contract EventFactory {
         uint256 startDate;
         bool raffleDraw;
         uint256 rafflePrice;
-        bool normalEventType;
     }
 
     uint totalEvents;

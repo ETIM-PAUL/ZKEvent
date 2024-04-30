@@ -1,4 +1,8 @@
-export const provider = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/eth_sepolia")
+import { ethers } from "ethers";
+import { http, createConfig } from '@wagmi/core'
+import { scrollSepolia } from '@wagmi/core/chains'
+
+export const provider = new ethers.getDefaultProvider("https://scroll-testnet.rpc.grove.city/v1/a7a7c8e2")
 export const aggregatorV3InterfaceABI = [
   {
     inputs: [],
@@ -48,3 +52,10 @@ export const aggregatorV3InterfaceABI = [
     type: "function",
   },
 ]
+
+export const config = createConfig({
+  chains: [scrollSepolia],
+  transports: {
+    [scrollSepolia.id]: http(),
+  },
+})

@@ -5,7 +5,6 @@ import React, { Suspense, lazy, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { EventsData } from "../constants";
 import { Link, useParams } from "react-router-dom";
-import WalletConnect from "./WalletConnect";
 import Logo from "./Logo";
 import ProposalTable from "./ProposalTable";
 import { PurchaseHistory } from "../constants";
@@ -177,8 +176,8 @@ const EventDetails = () => {
                                                     <div
                                                         key={index}
                                                         className={`flex flex-col justify-center px-8 py-6 border-b border-solid bg-gradient-to-l from-blue-500 to-purple-600  max-md:max-w-full ${index === 4
-                                                                ? "border-b-0"
-                                                                : ""
+                                                            ? "border-b-0"
+                                                            : ""
                                                             }`}
                                                     >
                                                         <div className="flex flex-row space-x-2 text-white text-lg">
@@ -211,8 +210,8 @@ const EventDetails = () => {
                             <div className="flex text-lg font-normal gap-4 ">
                                 <button
                                     className={`flex justify-center mt-4 py-2 max-w-full text-black ${!showParticipantTable
-                                            ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
-                                            : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
+                                        ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
+                                        : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
                                         } w-[130px] text-lg font-medium`}
                                     onClick={showProposalTable}
                                 >
@@ -220,8 +219,8 @@ const EventDetails = () => {
                                 </button>
                                 <button
                                     className={`flex justify-center mt-4 py-2 max-w-full text-black ${showParticipantTable
-                                            ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
-                                            : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
+                                        ? "bg-gradient-to-r from-[#5522CC] to-[#ED4690] hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
+                                        : "bg-white text-black hover:bg-gradient-to-r hover:from-[#9a8abd] hover:to-[#5946ed] hover:text-[#FFFFFF]"
                                         } w-[130px] text-lg font-medium`}
                                     onClick={showParticipant}
                                 >

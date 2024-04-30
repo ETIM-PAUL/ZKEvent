@@ -1,27 +1,34 @@
 import React, { useEffect, useState } from "react";
-import Logo from "./Logo";
 import { Link, useNavigate } from "react-router-dom";
 import { bgImage } from "../assets";
 import TopNav from "./TopNav";
 import axios from "axios";
 import { toast } from 'react-toastify';
 import { EVENT_FACTORY_ADDRESS } from "../../assets/Addresses";
-import { ethers } from "hardhat";
-import { aggregatorV3InterfaceABI, provider } from "../../assets/Constant";
+import { ethers } from "ethers";
+import { parseEther } from "viem";
+import { useWriteContract } from 'wagmi';
+import { waitForTransactionReceipt } from '@wagmi/core'
+import { aggregatorV3InterfaceABI, config, provider } from "../../assets/Constant";
+import { eventFactoryAbi } from "../../assets/EventFactoryAbi";
 
 const CreateEvent = (props) => {
+    const [updatingPrice, setUpdatingPrice] = useState(false);
+    const [priceInfoNormal, setPriceInfoNormal] = useState();
+    const [priceInfoRaffle, setPriceInfoRaffle] = useState();
     const [title, setTitle] = useState();
     const [startDate, setStartDate] = useState();
     const [endDate, setEndDate] = useState();
     const [location, setLocation] = useState();
     const [raffleType, setRaffleType] = useState(false);
-    const [rafflePrice, setRafflePrice] = useState();
+    const [rafflePrice, setRafflePrice] = useState(0);
     const [paymentType, setPaymentType] = useState();
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [ticketTypes, setTicketTypes] = useState([]);
     const [paymentModal, setPaymentModal] = useState(false);
     const navigate = useNavigate();
+    const { writeContractAsync } = useWriteContract()
 
     const [fileUrl, updateFileUrl] = useState("");
     const [newFile, updateNewFile] = useState("");
@@ -121,49 +128,112 @@ const CreateEvent = (props) => {
                 return;
             }
         }
+        const addr = "0x59F1ec1f10bD7eD9B938431086bC1D9e233ECf41"
+        setUpdatingPrice(true);
+        const priceFeed = new ethers.Contract(addr, aggregatorV3InterfaceABI, provider)
+        priceFeed.latestRoundData().then((roundData) => {
+            setUpdatingPrice(false)
+            // Do something with roundData
+            let amountEthInUsdNormal = (10 * 1e16) /
+                (Number(roundData[1]));
+            let amountEthInUsdRaffle = (20 * 1e16) /
+                (Number(roundData[1]));
+            if (raffleType == true || raffleType === "true") {
+                setPriceInfoRaffle(amountEthInUsdRaffle / 1e8)
+            } else {
+                setPriceInfoNormal(amountEthInUsdNormal / 1e8)
+            }
+        });
         setPaymentModal(true)
+    }
 
-        if (paymentType === "eth") {
-            let amountEthInUsdNormal;
-            let amountEthInUsdRaffle;
+    const processEventCreationPrice = async (type) => {
+        let amountEthInUsdNormal;
+        let amountEthInUsdRaffle;
+        if (type !== "undefined") {
+            setUpdatingPrice(true);
+        }
+        if (type === "eth") {
             const addr = "0x59F1ec1f10bD7eD9B938431086bC1D9e233ECf41"
             const priceFeed = new ethers.Contract(addr, aggregatorV3InterfaceABI, provider)
             priceFeed.latestRoundData().then((roundData) => {
+                setUpdatingPrice(false)
                 // Do something with roundData
                 amountEthInUsdNormal = (10 * 1e16) /
-                    (roundData);
+                    (Number(roundData[1]));
                 amountEthInUsdRaffle = (20 * 1e16) /
-                    (roundData);
-                console.log("Latest Raffle Data", amountEthInUsdRaffle)
-                console.log("Latest Normal Data", amountEthInUsdNormal)
-                console.log("Latest Round Data", roundData)
+                    (Number(roundData[1]));
+                if (raffleType == true || raffleType === "true") {
+                    setPriceInfoRaffle(amountEthInUsdRaffle / 1e8)
+                } else {
+                    setPriceInfoNormal(amountEthInUsdNormal / 1e8)
+                }
             });
-            // createEventEth()
-        } else {
-            createEventERC();
+        } if (type === "dai") {
+            const addr = "0x9388954B816B2030B003c81A779316394b3f3f11"
+            const priceFeed = new ethers.Contract(addr, aggregatorV3InterfaceABI, provider)
+            priceFeed.latestRoundData().then((roundData) => {
+                setUpdatingPrice(false)
+                // Do something with roundData
+                amountEthInUsdNormal = (10 * 1e16) /
+                    (Number(roundData[1]));
+                amountEthInUsdRaffle = (20 * 1e16) /
+                    (Number(roundData[1]));
+                if (raffleType == true || raffleType === "true") {
+                    setPriceInfoRaffle(amountEthInUsdRaffle / 1e8)
+                } else {
+                    setPriceInfoNormal(amountEthInUsdNormal / 1e8)
+                }
+            });
+        }
+        if (type === "link") {
+            const addr = "0xaC3E04999aEfE44D508cB3f9B972b0Ecd07c1efb"
+            const priceFeed = new ethers.Contract(addr, aggregatorV3InterfaceABI, provider)
+            priceFeed.latestRoundData().then((roundData) => {
+                setUpdatingPrice(false)
+                // Do something with roundData
+                amountEthInUsdNormal = (10 * 1e16) /
+                    (Number(roundData[1]));
+                amountEthInUsdRaffle = (20 * 1e16) /
+                    (Number(roundData[1]));
+                if (raffleType == true || raffleType === "true") {
+                    setPriceInfoRaffle(amountEthInUsdRaffle / 1e8)
+                } else {
+                    setPriceInfoNormal(amountEthInUsdNormal / 1e8)
+                }
+            });
         }
     }
+
+    const executeEventCreation = async () => {
+        if (paymentType === "eth") {
+            createEventEth();
+        }
+    }
+
     const createEventEth = async () => {
         try {
-            const eventDetails = {
+            const eventDetails = [
                 title,
                 location,
-                endDate: Date.parse(dateString) / 1000,
-                startDate: Date.parse(dateString) / 1000,
-                raffleDraw: raffleType,
-                rafflePrice: rafflePrice,
-            }
+                BigInt(Date.parse(endDate) / 1000),
+                BigInt(Date.parse(startDate) / 1000),
+                raffleType,
+                rafflePrice === 0 ? BigInt(0) : BigInt(rafflePrice),
+            ]
             setIsSubmitLoading(true);
-
+            console.log(eventDetails)
+            console.log(ticketTypes)
             //approve function
             const result2 = writeContractAsync({
-                abi: busdAbi,
+                abi: eventFactoryAbi,
                 address: EVENT_FACTORY_ADDRESS,
                 functionName: 'createEventEth',
                 args: [
-                    eventDetails,
-                    ticketTypes,
-                ]
+                    [eventDetails],
+                    ticketTypes
+                ],
+                value: BigInt(1)
             });
 
             const forwardResult = await waitForTransactionReceipt(config, {
@@ -181,8 +251,7 @@ const CreateEvent = (props) => {
             if (error?.code === 4001) {
                 toast.error(error.message, 5000);
             }
-            setLoading(false);
-            setDisabled(false);
+            setIsSubmitLoading(false);
         }
     }
     const createEventERC = async () => {
@@ -199,15 +268,16 @@ const CreateEvent = (props) => {
 
             //approve function
             const result2 = writeContractAsync({
-                abi: busdAbi,
+                abi: eventFactoryAbi,
                 address: EVENT_FACTORY_ADDRESS,
-                functionName: 'approve',
+                functionName: 'createEventEth',
                 args: [
-                    eventDetails,
+                    [eventDetails],
                     ticketTypes,
-                ]
+                ],
+                value: BigInt(1)
             });
-
+            console.log(result2)
             //await aprrove transaction result
             const approveResult = await waitForTransactionReceipt(config, {
                 hash: await result2,
@@ -253,7 +323,7 @@ const CreateEvent = (props) => {
             toast.error("Maximum Ticket Types Reached", 5000);
             return;
         }
-        setTicketTypes([...ticketTypes, { name, price }]);
+        setTicketTypes([...ticketTypes, { price: BigInt(price), name }]);
         setName('');
         setPrice('');
     };
@@ -486,15 +556,29 @@ const CreateEvent = (props) => {
                             <div className="mb-4">
                                 <p>Choose a Payment Method and Proceed</p>
                             </div>
+                            {updatingPrice &&
+                                <div className="mb-4">
+                                    <p className="text-red-500 text-bold text-md">Fetching live data feeds for your preferred payment</p>
+                                </div>
+                            }
+                            {(raffleType == true || raffleType === "true") && priceInfoRaffle > 0 &&
+                                <div className="mb-4">
+                                    <p className="text-red-500 text-bold text-md">Creation of a Raffle Inclusive Event will cost about {priceInfoRaffle}</p>
+                                </div>
+                            }
+                            {(raffleType == false || raffleType === "false") && priceInfoNormal > 0 &&
+                                <div className="mb-4">
+                                    <p className="text-red-500 text-bold text-md">Creation of a Non-Raffle Inclusive Event will cost about {priceInfoNormal}</p>
+                                </div>
+                            }
 
                             <div className="flex flex-col gap space-y-1 ">
                                 <select
-                                    value={raffleType}
-                                    onChange={(e) => setPaymentType(e.target.value)}
-                                    required
+                                    value={paymentType}
+                                    onChange={(e) => { setPaymentType(e.target.value); processEventCreationPrice(e.target.value) }}
                                     className="bg-transparent border border-[#999999]  outline-none p-3 "
                                 >
-                                    <option disabled>--please select payment type--</option>
+                                    <option value="undefined">--please select payment type--</option>
                                     <option value="eth">ETH</option>
                                     <option value="link">LINK</option>
                                     <option value="dai">DAI</option>
@@ -513,11 +597,11 @@ const CreateEvent = (props) => {
                                 </button>
 
                                 <button
-                                    onClick={() => setPaymentModal(true)}
+                                    onClick={() => executeEventCreation()}
                                     type="submit"
-                                    disabled={isSubmitLoading}
+                                    disabled={isSubmitLoading || updatingPrice}
                                     className={`${isSubmitLoading && "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                        } justify-center disabled:opacity-90 disabled:cursor-not-allowed items-center mt-12 btn text-md font-semibold w-full py-3 -lg transition-colors duration-300 ease-in-out bg-gradient-to-r from-[#5522CC] to-[#8352f5] text-white`}
+                                        } justify-center disabled:opacity-20 disabled:cursor-not-allowed items-center mt-12 btn text-md font-semibold w-full py-3 -lg transition-colors duration-300 ease-in-out bg-gradient-to-r from-[#5522CC] to-[#8352f5] text-white`}
                                 >
                                     {isSubmitLoading ? "Processing" : "Create Event"}
                                 </button>

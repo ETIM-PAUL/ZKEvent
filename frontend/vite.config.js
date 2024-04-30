@@ -11,10 +11,6 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  resolve: {
-    alias: {
-      fsevents: 'fsevents/fsevents.js', // Specify the .js file instead of the .node file
-    },
-  },
+
   plugins: [react()],
 });
