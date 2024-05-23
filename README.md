@@ -104,9 +104,6 @@ There are rewards for users who use this event and ticketing platform.
 
 ## CONTRACT ADDRESS
 
-- ZKEventFactory Contract Address **https://sepolia.scrollscan.com/address/0x2140EFda51BD757Bb59f762F2F2Cb0f3fE30EbE9#code**
-- ZKEvent Contract Address **https://sepolia.scrollscan.com/address/0x2140EFda51BD757Bb59f762F2F2Cb0f3fE30EbE9#code**
-
 ## SCREENSHOTS
 
 ![Screenshot 1](./screenshots/ss1.png)
